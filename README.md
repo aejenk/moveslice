@@ -1,4 +1,6 @@
 # moveslice
+[![moveslice](https://img.shields.io/crates/v/moveslice.svg)](https://crates.io/crates/moveslice)
+[![moveslice](https://docs.rs/moveslice/badge.svg)](https://docs.rs/crate/moveslice)
 
 This crate contains a single function `moveslice`. Its purpose
 is to move a chunk within a slice around. It only uses safe functions,
