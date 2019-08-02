@@ -1,3 +1,4 @@
+#![no_std]
 //! This crate contains a single function `moveslice`. Its purpose 
 //! is to move a chunk within a slice around. It only uses safe functions,
 //! and acts efficiently by using the 
@@ -36,7 +37,7 @@
 //! 
 //! // You could pass the destination as the same value as chunk.0.
 //! // However this would mean nothing is moved.
-//! // Since it's not technically an error however, only a warning is logged.
+//! // This doesn't panic, but it's a no-op.
 //! moveslice(&mut arr, (0,3), 0);
 //! ```
 
@@ -94,7 +95,5 @@ pub fn moveslice<T>(slice: &mut [T], chunk: (usize, usize), destination: usize) 
         let mid = mid.split_at_mut(index2).0;
 
         mid.rotate_right(chunk.1-chunk.0);
-    } else {
-        println!("The destination is the same as the start of the chunk. Nothing was moved.");
     }
 }
