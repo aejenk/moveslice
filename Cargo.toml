@@ -1,0 +1,13 @@
+[package]
+name = "moveslice"
+description = "A one-function crate to move chunks in a slice around."
+license = "MPL-2.0"
+readme = "README.md"
+keywords = ["slice", "move", "chunk", "index"]
+version = "1.0.0"
+authors = ["Calmynt <mctech26@gmail.com>"]
+edition = "2018"
+categories = ["algorithms", "rust-patterns"]
+maintenance = { status = "passively-maintained" }
+
+[dependencies]
