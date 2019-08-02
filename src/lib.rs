@@ -73,7 +73,7 @@ pub fn moveslice<T>(slice: &mut [T], chunk: (usize, usize), destination: usize) 
     if destination > chunk.0 {
         let len = { slice.len() };
         let index1 = chunk.0;
-        let index2 = destination;
+        let index2 = destination - chunk.0;
         let chunksize = chunk.1 - chunk.0;
 
         let (_, mid) = slice.split_at_mut(index1);
