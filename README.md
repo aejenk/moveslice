@@ -41,8 +41,8 @@ arr.moveslice(3..6, 7); // will panic
 let res = arr.try_moveslice(3..6, 7);
 assert!(res.is_err());
 
-// Moveslice also comes with its own `Error` enum, since there
-// are three main cases for failure.
+// Moveslice also comes with its own `Error` enum, to offer
+// better debugging. Right now, there's only one error case.
 
 // You could pass the destination as the same value as chunk.0.
 // However this would mean nothing is moved.
