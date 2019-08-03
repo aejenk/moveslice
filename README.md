@@ -1,5 +1,9 @@
 # moveslice
 
+[![moveslice](https://img.shields.io/crates/v/moveslice.svg)](https://crates.io/crates/moveslice)
+[![moveslice](https://docs.rs/moveslice/badge.svg)](https://docs.rs/crate/moveslice)
+
+
 This crate contains functionality to move a slice within an array around.
 It only uses safe functions, and acts efficiently by using the
 [`split_at_mut`][split-at-mut] and
