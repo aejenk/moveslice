@@ -3,7 +3,6 @@
 [![moveslice](https://img.shields.io/crates/v/moveslice.svg)](https://crates.io/crates/moveslice)
 [![moveslice](https://docs.rs/moveslice/badge.svg)](https://docs.rs/crate/moveslice)
 
-
 This crate contains functionality to move a slice within an array around.
 It only uses safe functions, and acts efficiently by using the
 [`split_at_mut`][split-at-mut] and
@@ -13,13 +12,13 @@ This crate also has a focus on being `no_std`, to allow this functionality
 in all cases where it is required.
 
 The main feature this crate provides is implementing `moveslice` functions
-for any and all slices/arrays. In effect, it implements it on any type that 
-also implements the `AsMut<[T]>` trait. This includes slices and vectors.
+for any and all slices/arrays. In effect, it implements it on any type that
+also implements the AsMut<[T]> trait. This includes slices and vectors.
 
 ## Examples:
 
 ```rust
-use moveslice::Moveslice;
+use moveslice::{Moveslice, Error};
 
 let mut arr = [1,2,3,4,5,6,7,8,9];
 
@@ -45,8 +44,12 @@ arr.moveslice(3..6, 7); // will panic
 let res = arr.try_moveslice(3..6, 7);
 assert!(res.is_err());
 
-// Moveslice also comes with its own `Error` enum, to offer
-// better debugging. Right now, there's only one error case.
+// Moveslice also comes with its own `Error` enum, with diagnostic
+// information to help debugging. The line before would have triggered
+// an OutOfBoundsMove error. The following line would trigger the
+// InvalidBounds error.
+let res = arr.try_moveslice(9..10, 7);
+assert!(if let Err(Error::InvalidBounds{..}) = res {true} else {false});
 
 // You could pass the destination as the same value as chunk.0.
 // However this would mean nothing is moved.
