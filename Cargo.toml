@@ -12,3 +12,4 @@ categories = ["algorithms", "rust-patterns", "no-std"]
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
+# as-slice = "0.1.0"

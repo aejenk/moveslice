@@ -1,4 +1,3 @@
-#![no_std]
 //! This crate contains a single function `moveslice`. Its purpose 
 //! is to move a chunk within a slice around. It only uses safe functions,
 //! and acts efficiently by using the 
@@ -41,6 +40,9 @@
 //! moveslice(&mut arr, (0,3), 0);
 //! ```
 
+use std::ops::Bound::*;
+use std::ops::RangeBounds;
+
 /// Moves a slice around in an array.
 /// Works by splitting and rotating.
 /// 
@@ -69,31 +71,116 @@
 /// let result = moveslice(&mut arr, (3,6), 7); // will panic
 /// # }
 /// ```
-pub fn moveslice<T>(slice: &mut [T], chunk: (usize, usize), destination: usize) {
-    if destination > chunk.0 {
-        let len = { slice.len() };
-        let index1 = chunk.0;
-        let index2 = destination - chunk.0;
-        let chunksize = chunk.1 - chunk.0;
 
-        let (_, mid) = slice.split_at_mut(index1);
 
-        let mid = if destination + chunksize <= len {
-            mid.split_at_mut(index2).0
-        } else {
-            panic!("Direction goes beyond slice [len = {}, destination = {}..{}]. ",
-                    len, destination, destination + chunksize);
+pub trait Moveslice<T, R> {
+  type Target; 
+  type Err; 
+  fn moveslice(&mut self, bounds: R, destination: Self::Target)
+    where R: RangeBounds<usize>;
+  fn try_moveslice(&mut self, bounds: R, destination: Self::Target) -> Result<(), Self::Err>
+    where R: RangeBounds<usize>;
+}
+
+impl<T: 'static,R,A> Moveslice<T,R> for A where A: AsMut<[T]> {
+    type Target = usize;
+    type Err = String;
+
+    fn moveslice(&mut self, bounds: R, destination: Self::Target)
+    where R: RangeBounds<usize> 
+    {
+        let slice = self.as_mut();
+        let startbound = bounds.start_bound();
+        let endbound = bounds.end_bound();
+        let chunk = if let Included(x) = startbound {
+            if let Excluded(y) = endbound {
+                (*x,*y)
+            }
+            else if let Included(y) = endbound {
+                (*x,y+1)
+            }
+            else{
+                panic!("An endbound, excluded or included, is required.");
+            }
+        }
+        else {
+            panic!("A startbound is required.");
         };
 
-        mid.rotate_left(chunk.1-chunk.0);
-    } else if destination < chunk.0 {
-        let index1 = destination;
-        let index2 = chunk.1 - destination;
+        if destination > chunk.0 {
+            let chunksize = chunk.1 - chunk.0;
+            let index1 = chunk.0;
+            let index2 = destination + chunksize - index1;
 
-        let (_, mid) = slice.split_at_mut(index1);
+            let (_, mid) = slice.split_at_mut(index1);
 
-        let mid = mid.split_at_mut(index2).0;
+            let mid = if destination + chunksize <= mid.len() {
+                mid.split_at_mut(index2).0
+            } else {
+                panic!("Direction goes beyond slice [len = {}, destination = {}..{}]. ",
+                        mid.len(), destination, destination + chunksize);
+            };
 
-        mid.rotate_right(chunk.1-chunk.0);
+            mid.rotate_left(chunk.1-chunk.0);
+        } else if destination < chunk.0 {
+            let index1 = destination;
+            let index2 = chunk.1 - destination;
+
+            let (_, mid) = slice.split_at_mut(index1);
+
+            let mid = mid.split_at_mut(index2).0;
+
+            mid.rotate_right(chunk.1-chunk.0);
+        }
     }
+
+    fn try_moveslice(&mut self, bounds: R, destination: Self::Target) -> Result<(), Self::Err> 
+    where R: RangeBounds<usize> 
+    {
+        let slice = self.as_mut();
+        let startbound = bounds.start_bound();
+        let endbound = bounds.end_bound();
+        let chunk = if let Included(x) = startbound {
+            if let Excluded(y) = endbound {
+                (*x,*y)
+            }
+            else if let Included(y) = endbound {
+                (*x,y+1)
+            }
+            else{
+                return Err(String::from("An endbound, excluded or included, is required."));
+            }
+        }
+        else {
+            return Err(String::from("A startbound is required."));
+        };
+
+        if destination > chunk.0 {
+            let chunksize = chunk.1 - chunk.0;
+            let index1 = chunk.0;
+            let index2 = destination + chunksize - index1;
+
+            let (_, mid) = slice.split_at_mut(index1);
+
+            let mid = if destination + chunksize <= mid.len() {
+                mid.split_at_mut(index2).0
+            } else {
+                return Err(format!("Direction goes beyond slice [len = {}, destination = {}..{}]. ",
+                        mid.len(), destination, destination + chunksize));
+            };
+
+            mid.rotate_left(chunk.1-chunk.0);
+        } else if destination < chunk.0 {
+            let index1 = destination;
+            let index2 = chunk.1 - destination;
+
+            let (_, mid) = slice.split_at_mut(index1);
+
+            let mid = mid.split_at_mut(index2).0;
+
+            mid.rotate_right(chunk.1-chunk.0);
+        }
+
+        Ok(())
+}
 }
