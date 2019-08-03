@@ -13,8 +13,8 @@ This crate also has a focus on being `no_std`, to allow this functionality
 in all cases where it is required.
 
 The main feature this crate provides is implementing `moveslice` functions
-for any and all slices/arrays. Note that this only works for slices - vectors
-and other structures would need to be converted into a slice before using this function.
+for any and all slices/arrays. In effect, it implements it on any type that 
+also implements the `AsMut<[T]>` trait. This includes slices and vectors.
 
 ## Examples:
 

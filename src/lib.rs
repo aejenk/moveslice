@@ -8,8 +8,8 @@
 //! in all cases where it is required.
 //! 
 //! The main feature this crate provides is implementing `moveslice` functions
-//! for any and all slices/arrays. Note that this only works for slices - vectors
-//! and other structures would need to be converted into a slice before using this function.
+//! for any and all slices/arrays. In effect, it implements it on any type that 
+//! also implements the AsMut<[T]> trait. This includes slices and vectors.
 //! 
 //! # Examples:
 //! 
@@ -164,7 +164,7 @@ impl<T: 'static,R,A> Moveslice<T,R> for A where A: AsMut<[T]> {
 
             let (_, mid) = slice.split_at_mut(index1);
 
-            let mid = if destination + chunksize <= mid.len() {
+            let mid = if index2 <= mid.len() {
                 mid.split_at_mut(index2).0
             } else {
                 return Err(Error::OutOfBoundsMove {
