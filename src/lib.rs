@@ -5,7 +5,7 @@
 //! [`rotate_left`][rotate-left]/[`rotate_right`][rotate-right] functions.
 //! 
 //! This crate also has a focus on being `no_std`, to allow this functionality
-//! in all case where it is required.
+//! in all cases where it is required.
 //! 
 //! The main feature this crate provides is implementing `moveslice` functions
 //! for any and all slices/arrays. Note that this only works for slices - vectors
