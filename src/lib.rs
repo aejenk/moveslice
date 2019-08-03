@@ -49,7 +49,7 @@
 //! // an OutOfBoundsMove error. The following line would trigger the 
 //! // InvalidBounds error.
 //! let res = arr.try_moveslice(9..10, 7);
-//! assert!(if let Err(Error::InvalidBounds) = res {true} else {false});
+//! assert!(if let Err(Error::InvalidBounds{..}) = res {true} else {false});
 //! 
 //! // You could pass the destination as the same value as chunk.0.
 //! // However this would mean nothing is moved.
@@ -87,7 +87,12 @@ pub enum Error {
     /// If the bounds passed are already out of bounds, this 
     /// error is returned instead. This is to differentiate
     /// between the two out-of-bounds cases.
-    InvalidBounds,
+    InvalidBounds {
+        // The length of the array/slice being modified.
+        len: usize,
+        // The effective bounds passed in.
+        bounds: (usize, usize)
+    }
 }
 
 /// A trait declaring the `moveslice` and `try_moveslice` functions.
@@ -119,43 +124,12 @@ impl<T: 'static,R,A> Moveslice<T,R> for A where A: AsMut<[T]> {
     fn moveslice(&mut self, bounds: R, destination: Self::Target)
     where R: RangeBounds<usize> 
     {
-        let slice = self.as_mut();
-        let startbound = bounds.start_bound();
-        let endbound = bounds.end_bound();
-        let x = if let Included(x) = startbound {*x} else {0};
-        let y = if let Excluded(x) = endbound {*x}
-                else if let Included(x) = endbound {x+1} 
-                else {slice.len()};
-        let chunk = (x,y);
-
-        if chunk.0 > slice.len() || chunk.1 > slice.len() {
-            panic!("Bounds passed are out of bounds. [len={}, bounds={}..{}]", slice.len(), chunk.0, chunk.1);
+        let res = self.try_moveslice(bounds, destination);
+        if let Err(Error::OutOfBoundsMove{len, dest: (x,y)}) = res {
+            panic!("Movement goes beyond bounds. [len = {}, destination = {}..{}]", len, x, y);
         }
-
-        if destination > chunk.0 {
-            let chunksize = chunk.1 - chunk.0;
-            let index1 = chunk.0;
-            let index2 = destination + chunksize - index1;
-
-            let (_, mid) = slice.split_at_mut(index1);
-
-            let mid = if index2 <= mid.len() {
-                mid.split_at_mut(index2).0
-            } else {
-                panic!("Direction goes beyond slice [len = {}, destination = {}..{}]. ",
-                        slice.len(), destination, destination + chunksize);
-            };
-
-            mid.rotate_left(chunk.1-chunk.0);
-        } else if destination < chunk.0 {
-            let index1 = destination;
-            let index2 = chunk.1 - destination;
-
-            let (_, mid) = slice.split_at_mut(index1);
-
-            let mid = mid.split_at_mut(index2).0;
-
-            mid.rotate_right(chunk.1-chunk.0);
+        else if let Err(Error::InvalidBounds{len, bounds: (x,y)}) = res {
+            panic!("Bounds passed go beyond slice length. [len = {}, bounds = {}..{}]", len, x, y);
         }
     }
 
@@ -172,7 +146,10 @@ impl<T: 'static,R,A> Moveslice<T,R> for A where A: AsMut<[T]> {
         let chunk = (x,y);
 
         if chunk.0 > slice.len() || chunk.1 > slice.len() {
-            return Err(Error::InvalidBounds);
+            return Err(Error::InvalidBounds {
+                len: slice.len(),
+                bounds: chunk
+            });
         }
 
         if destination > chunk.0 {
