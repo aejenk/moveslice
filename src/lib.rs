@@ -14,7 +14,7 @@
 //! # Examples:
 //! 
 //! ```
-//! use moveslice::Moveslice;
+//! use moveslice::{Moveslice, Error};
 //! 
 //! let mut arr = [1,2,3,4,5,6,7,8,9];
 //! 
@@ -44,8 +44,12 @@
 //! let res = arr.try_moveslice(3..6, 7);
 //! assert!(res.is_err());
 //! 
-//! // Moveslice also comes with its own `Error` enum, since there 
-//! // are three main cases for failure.
+//! // Moveslice also comes with its own `Error` enum, with diagnostic
+//! // information to help debugging. The line before would have triggered
+//! // an OutOfBoundsMove error. The following line would trigger the 
+//! // InvalidBounds error.
+//! let res = arr.try_moveslice(9..10, 7);
+//! assert!(if let Err(Error::InvalidBounds) = res {true} else {false});
 //! 
 //! // You could pass the destination as the same value as chunk.0.
 //! // However this would mean nothing is moved.
@@ -77,7 +81,13 @@ pub enum Error {
         len: usize,
         /// The location of where the chunk would have ended up.
         dest: (usize, usize)
-    }
+    },
+
+    /// This error signifies an invalid bounds error.
+    /// If the bounds passed are already out of bounds, this 
+    /// error is returned instead. This is to differentiate
+    /// between the two out-of-bounds cases.
+    InvalidBounds,
 }
 
 /// A trait declaring the `moveslice` and `try_moveslice` functions.
@@ -118,6 +128,10 @@ impl<T: 'static,R,A> Moveslice<T,R> for A where A: AsMut<[T]> {
                 else {slice.len()};
         let chunk = (x,y);
 
+        if chunk.0 > slice.len() || chunk.1 > slice.len() {
+            panic!("Bounds passed are out of bounds. [len={}, bounds={}..{}]", slice.len(), chunk.0, chunk.1);
+        }
+
         if destination > chunk.0 {
             let chunksize = chunk.1 - chunk.0;
             let index1 = chunk.0;
@@ -156,6 +170,10 @@ impl<T: 'static,R,A> Moveslice<T,R> for A where A: AsMut<[T]> {
                 else if let Included(x) = endbound {x+1} 
                 else {slice.len()};
         let chunk = (x,y);
+
+        if chunk.0 > slice.len() || chunk.1 > slice.len() {
+            return Err(Error::InvalidBounds);
+        }
 
         if destination > chunk.0 {
             let chunksize = chunk.1 - chunk.0;
