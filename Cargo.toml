@@ -1,0 +1,14 @@
+[package]
+name = "moveslice"
+description = "A one-function crate to move chunks in a slice around."
+license = "MPL-2.0"
+repository = "https://github.com/Calmynt/moveslice"
+readme = "README.md"
+keywords = ["slice", "move", "chunk", "index"]
+version = "2.0.1"
+authors = ["ENBYSS"]
+edition = "2018"
+categories = ["algorithms", "rust-patterns", "no-std"]
+maintenance = { status = "passively-maintained" }
+
+[dependencies]
